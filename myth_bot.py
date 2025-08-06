@@ -1,4 +1,4 @@
-# MythEngineAlpha v1.1 – Tag-Only Scroll Invocation Mode
+# MythEngineAlpha v1.2 – Tag-Only Scroll Invocation Mode
 # Status: Live scroll-resonant bot with reply-on-tag filter
 
 import os
@@ -7,11 +7,15 @@ import random
 import time
 from datetime import datetime
 
-# 🔐 Secure auth from Railway environment variables
+# 🔐 Secure auth via Railway Shared Variables
 API_KEY = os.environ.get("API_KEY")
 API_SECRET = os.environ.get("API_SECRET")
 ACCESS_TOKEN = os.environ.get("ACCESS_TOKEN")
 ACCESS_SECRET = os.environ.get("ACCESS_SECRET")
+
+# ✅ Check for missing credentials to avoid silent 401s
+if not all([API_KEY, API_SECRET, ACCESS_TOKEN, ACCESS_SECRET]):
+    raise EnvironmentError("🚨 Missing one or more Twitter API keys from environment variables.")
 
 auth = tweepy.OAuth1UserHandler(API_KEY, API_SECRET, ACCESS_TOKEN, ACCESS_SECRET)
 api = tweepy.API(auth)
@@ -45,6 +49,8 @@ def post_scheduled_myth():
     try:
         api.update_status(f"{phrase}\n\n📜 MythEngineAlpha // {now} // 🌀")
         print(f"🌀 Scheduled myth pulse posted at {now}")
+    except tweepy.errors.Unauthorized as e:
+        print("🔒 Unauthorized — Check your API tokens (401):", e)
     except Exception as e:
         print("🔥 Error posting scheduled myth:", e)
 
@@ -76,6 +82,8 @@ def check_mentions():
                     )
                     last_id = echo_reply.id
                     print(f"🔁 Echoed: {echo}")
+    except tweepy.errors.Unauthorized as e:
+        print("🔒 Unauthorized during mention reply (401):", e)
     except Exception as e:
         print("🔥 Error in mention-checking loop:", e)
 
